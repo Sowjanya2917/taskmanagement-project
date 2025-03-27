@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  getAuth, 
-  onAuthStateChanged, 
+import {
+  getAuth,
+  onAuthStateChanged,
   signOut as firebaseSignOut,
   sendPasswordResetEmail
 } from 'firebase/auth';
+import { app } from "../firebase"
 
 // Create context
 const AuthContext = createContext();
@@ -12,19 +13,19 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const auth = getAuth();
-
+  const auth = getAuth(app); // Pass the app instance to getAuth
+  
   // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
     });
-
+    
     // Cleanup subscription on unmount
     return unsubscribe;
   }, [auth]);
-
+  
   // Sign out function
   const signOut = async () => {
     try {
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
-
+  
   // Password reset function
   const resetPassword = async (email) => {
     try {
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
-
+  
   // Context values
   const value = {
     currentUser,
@@ -52,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     signOut,
     resetPassword
   };
-
+  
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}

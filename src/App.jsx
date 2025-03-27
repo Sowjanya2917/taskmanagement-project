@@ -3,7 +3,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import LandingPage from './pages/LandingPage';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from "./contexts/AuthContext"
+import "./firebase"
+import Dashboard from './pages/Dashboard';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -19,7 +21,7 @@ const ProtectedRoute = ({ children }) => {
   }
   
   if (!currentUser) {
-    return <Navigate to="/" />;
+    return <Navigate to="/login" />;
   }
   
   return children;
@@ -49,30 +51,44 @@ const App = () => {
   return (
     <AuthProvider>
       <Routes>
-        <Route 
-          path="/" 
+        <Route
+          path="/"
+          element={
+            <PublicOnlyRoute>
+              <LandingPage />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/login"
           element={
             <PublicOnlyRoute>
               <LoginPage />
             </PublicOnlyRoute>
-          } 
+          }
         />
-        <Route 
-          path="/register" 
+        <Route
+          path="/register"
           element={
             <PublicOnlyRoute>
               <RegisterPage />
             </PublicOnlyRoute>
-          } 
+          }
         />
-        <Route 
-          path="/home" 
+        <Route
+          path="/home"
           element={
             <ProtectedRoute>
               <LandingPage />
             </ProtectedRoute>
-          } 
+          }
         />
+        <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route
+          path="*"
+          element={<Navigate to="/" />}
+        />
+
       </Routes>
     </AuthProvider>
   );

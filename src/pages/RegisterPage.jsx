@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, UserPlus } from 'lucide-react';
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
+import { app } from "../firebase"
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -18,7 +19,7 @@ const RegisterPage = () => {
   const [authError, setAuthError] = useState('');
   
   const navigate = useNavigate();
-  const auth = getAuth();
+  const auth = getAuth(app); // Pass the app instance to getAuth
   
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
+import { app } from "../firebase"
 
 export const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -16,7 +17,7 @@ export const LoginPage = () => {
   const [authError, setAuthError] = useState('');
   
   const navigate = useNavigate();
-  const auth = getAuth();
+  const auth = getAuth(app); // Pass the app instance to getAuth
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,9 +62,6 @@ export const LoginPage = () => {
         // If login successful
         console.log('User logged in:', userCredential.user);
         
-        // If "Remember me" is not checked, session persistence is already the default
-        // You could implement a different persistence method if needed
-        
         // Redirect to home page
         navigate('/home');
       } catch (error) {
@@ -82,7 +80,7 @@ export const LoginPage = () => {
             setAuthError('This account has been disabled');
             break;
           default:
-            setAuthError('An error occurred during login. Please try again');
+            setAuthError('In Valid Credentails Please try again');
         }
       } finally {
         setLoading(false);
@@ -237,11 +235,11 @@ export const LoginPage = () => {
           </p>
           <div className="mt-12 grid grid-cols-3 gap-6 w-full max-w-md">
             <div className="bg-white bg-opacity-10 p-4 rounded-lg backdrop-blur-sm text-center">
-              <div className="text-3xl font-bold">10k+</div>
+              <div className="text-3xl font-bold">1000+</div>
               <div className="text-blue-100 text-sm">Users</div>
             </div>
             <div className="bg-white bg-opacity-10 p-4 rounded-lg backdrop-blur-sm text-center">
-              <div className="text-3xl font-bold">25+</div>
+              <div className="text-3xl font-bold">10+</div>
               <div className="text-blue-100 text-sm">Features</div>
             </div>
             <div className="bg-white bg-opacity-10 p-4 rounded-lg backdrop-blur-sm text-center">
