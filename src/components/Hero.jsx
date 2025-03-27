@@ -66,7 +66,7 @@ const Hero = () => {
                     <div className="md:w-1/2 lg:w-7/12 relative">
                         {/* Main Screenshot */}
                         <img
-                            src="/api/placeholder/600/400"
+                            src="https://img.freepik.com/free-vector/task-management-abstract-concept-illustration_335657-2127.jpg"
                             alt="TaskMaster Dashboard Preview"
                             className="rounded-xl shadow-xl relative z-10"
                         />
