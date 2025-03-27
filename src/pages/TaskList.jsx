@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoreVertical, Clock, ArrowRight, Edit, Trash, AlertCircle, Tag, MessageSquare } from 'lucide-react';
+import { MoreVertical, Clock, ArrowRight, Edit, Trash, AlertCircle, Tag, MessageSquare, User, Eye } from 'lucide-react';
 import TaskComments from './TaskComments';
 
 const TaskList = ({ 
@@ -7,12 +7,16 @@ const TaskList = ({
   tasks, 
   onUpdateStatus, 
   onEditTask, 
-  onDeleteTask, 
+  onDeleteTask,
+  onViewDetails,
   statuses,
   isLoading,
   onDragStart,
   onDragOver,
-  onDrop
+  onDragLeave,
+  onDrop,
+  teamMembers = [],
+  currentUser
 }) => {
   const [activeCommentsTaskId, setActiveCommentsTaskId] = useState(null);
   
@@ -100,6 +104,14 @@ const TaskList = ({
     setActiveCommentsTaskId(taskId);
   };
 
+  // Get team member display name
+  const getMemberName = (memberId) => {
+    if (!memberId) return null;
+    
+    const member = teamMembers.find(m => m.id === memberId);
+    return member ? (member.name || member.email) : null;
+  };
+
   // Add event listener to close dropdowns when clicking outside
   React.useEffect(() => {
     document.addEventListener('click', closeDropdowns);
@@ -113,6 +125,7 @@ const TaskList = ({
       className="bg-white rounded-lg shadow flex flex-col h-full"
       onDragOver={(e) => onDragOver(e, status.id)}
       onDrop={(e) => onDrop(e, status.id)}
+      onDragLeave={onDragLeave}
     >
       <div className={`p-4 border-b ${
         status.id === 'not-started' ? 'bg-gray-50' :
@@ -140,13 +153,17 @@ const TaskList = ({
                 className="p-3 bg-white border rounded-lg hover:shadow-sm transition-shadow cursor-move"
                 draggable
                 onDragStart={(e) => onDragStart(e, task.id, task.status)}
+                onClick={() => onViewDetails(task.id)}
               >
                 <div className="flex justify-between items-start">
                   <h4 className="font-medium text-gray-900 mb-1">{task.title}</h4>
                   
                   <div className="relative">
                     <button 
-                      onClick={() => toggleDropdown(task.id)} 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDropdown(task.id);
+                      }} 
                       className="p-1 rounded-full hover:bg-gray-100 focus:outline-none dropdown-toggle"
                     >
                       <MoreVertical className="h-4 w-4 text-gray-500" />
@@ -158,6 +175,19 @@ const TaskList = ({
                       className="dropdown-menu hidden absolute right-0 z-10 mt-1 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                     >
                       <div className="py-1">
+                        {/* View details option */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewDetails(task.id);
+                            toggleDropdown(task.id);
+                          }}
+                          className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <Eye className="mr-3 h-4 w-4" />
+                          View Details
+                        </button>
+                        
                         {/* Comments option */}
                         <button
                           onClick={(e) => {
@@ -173,7 +203,8 @@ const TaskList = ({
                         {/* Move to next status option */}
                         {getNextStatus(task.status) && (
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               moveToNextStatus(task.id, task.status);
                               toggleDropdown(task.id);
                             }}
@@ -186,7 +217,8 @@ const TaskList = ({
                         
                         {/* Edit option */}
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             onEditTask(task);
                             toggleDropdown(task.id);
                           }}
@@ -198,7 +230,8 @@ const TaskList = ({
                         
                         {/* Delete option */}
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             onDeleteTask(task.id);
                             toggleDropdown(task.id);
                           }}
@@ -216,6 +249,30 @@ const TaskList = ({
                   <p className="text-sm text-gray-600 mt-1 mb-2 line-clamp-2">
                     {task.description}
                   </p>
+                )}
+
+                {/* Assigned to */}
+                {task.assignedTo && task.assignedTo.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2 mb-2">
+                    {task.assignedTo.map((assigneeId) => {
+                      const isCurrentUser = assigneeId === currentUser?.uid;
+                      const memberName = getMemberName(assigneeId);
+                      
+                      if (!memberName) return null;
+                      
+                      return (
+                        <span 
+                          key={assigneeId} 
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            isCurrentUser ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          <User className="h-3 w-3 mr-1" />
+                          {isCurrentUser ? 'You' : memberName}
+                        </span>
+                      );
+                    })}
+                  </div>
                 )}
 
                 {/* Tags */}
@@ -248,7 +305,7 @@ const TaskList = ({
                       </span>
                     )}
                     
-                    {/* Comments button */}
+                    {/* Comments indicator button */}
                     <button
                       onClick={(e) => openComments(task.id, e)}
                       className="flex items-center text-xs text-indigo-600 hover:text-indigo-800"
@@ -261,7 +318,10 @@ const TaskList = ({
                   {/* Quick action button */}
                   {getNextStatus(task.status) && (
                     <button
-                      onClick={() => moveToNextStatus(task.id, task.status)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveToNextStatus(task.id, task.status);
+                      }}
                       className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center"
                     >
                       <ArrowRight className="h-3 w-3 mr-1" />

@@ -1,266 +1,86 @@
-// import React, { useState, useEffect } from 'react';
-// import { X, Calendar, Clock } from 'lucide-react';
-
-// const TaskForm = ({ onClose, onSubmit, task }) => {
-//   const [formData, setFormData] = useState({
-//     title: '',
-//     description: '',
-//     dueDate: '',
-//     priority: 'medium',
-//   });
-  
-//   const [errors, setErrors] = useState({});
-//   const [loading, setLoading] = useState(false);
-  
-//   // Initialize form with task data if editing
-//   useEffect(() => {
-//     if (task) {
-//       setFormData({
-//         title: task.title || '',
-//         description: task.description || '',
-//         dueDate: task.dueDate ? formatDateForInput(task.dueDate) : '',
-//         priority: task.priority || 'medium',
-//       });
-//     }
-//   }, [task]);
-  
-//   // Format date for the input field
-//   const formatDateForInput = (date) => {
-//     if (!date) return '';
-//     const d = new Date(date);
-//     return d.toISOString().split('T')[0];
-//   };
-  
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData({
-//       ...formData,
-//       [name]: value
-//     });
-    
-//     // Clear error when user types
-//     if (errors[name]) {
-//       setErrors({
-//         ...errors,
-//         [name]: ''
-//       });
-//     }
-//   };
-  
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-    
-//     // Validation
-//     const newErrors = {};
-//     if (!formData.title.trim()) {
-//       newErrors.title = 'Title is required';
-//     }
-    
-//     if (Object.keys(newErrors).length > 0) {
-//       setErrors(newErrors);
-//       return;
-//     }
-    
-//     setLoading(true);
-    
-//     // Process date for Firestore
-//     const processedData = {
-//       ...formData,
-//       dueDate: formData.dueDate ? new Date(formData.dueDate) : null
-//     };
-    
-//     try {
-//       const success = await onSubmit(processedData);
-//       if (success) {
-//         onClose();
-//       }
-//     } catch (error) {
-//       console.error('Error saving task:', error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // Handle click outside to close modal
-//   const handleClickOutside = (e) => {
-//     if (e.target.classList.contains('modal-backdrop')) {
-//       onClose();
-//     }
-//   };
-  
-//   return (
-//     <div 
-//       className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 modal-backdrop"
-//       onClick={handleClickOutside}
-//     >
-//       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
-//         <div className="flex justify-between items-center px-6 py-4 bg-indigo-50 border-b">
-//           <h3 className="text-lg font-medium text-indigo-900">
-//             {task ? 'Edit Task' : 'Create New Task'}
-//           </h3>
-//           <button
-//             onClick={onClose}
-//             className="text-gray-500 hover:text-gray-700 focus:outline-none"
-//           >
-//             <X className="h-5 w-5" />
-//           </button>
-//         </div>
-        
-//         <form onSubmit={handleSubmit} className="px-6 py-4">
-//           <div className="space-y-4">
-//             {/* Title field */}
-//             <div>
-//               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-//                 Task Title *
-//               </label>
-//               <input
-//                 type="text"
-//                 id="title"
-//                 name="title"
-//                 value={formData.title}
-//                 onChange={handleChange}
-//                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none ${
-//                   errors.title ? 'border-red-500' : 'border-gray-300'
-//                 }`}
-//                 placeholder="What needs to be done?"
-//                 disabled={loading}
-//               />
-//               {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
-//             </div>
-            
-//             {/* Description field */}
-//             <div>
-//               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-//                 Description
-//               </label>
-//               <textarea
-//                 id="description"
-//                 name="description"
-//                 value={formData.description}
-//                 onChange={handleChange}
-//                 rows={3}
-//                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-//                 placeholder="Add details about this task..."
-//                 disabled={loading}
-//               />
-//             </div>
-            
-//             {/* Due date field */}
-//             <div>
-//               <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
-//                 Due Date
-//               </label>
-//               <div className="relative">
-//                 <input
-//                   type="date"
-//                   id="dueDate"
-//                   name="dueDate"
-//                   value={formData.dueDate}
-//                   onChange={handleChange}
-//                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-//                   disabled={loading}
-//                 />
-//                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-//               </div>
-//             </div>
-            
-//             {/* Priority selection */}
-//             <div>
-//               <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
-//                 Priority
-//               </label>
-//               <div className="grid grid-cols-3 gap-3">
-//                 <button
-//                   type="button"
-//                   onClick={() => setFormData({ ...formData, priority: 'low' })}
-//                   className={`py-2 px-4 rounded-md text-sm font-medium border ${
-//                     formData.priority === 'low'
-//                       ? 'bg-green-50 border-green-500 text-green-700'
-//                       : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-//                   }`}
-//                   disabled={loading}
-//                 >
-//                   Low
-//                 </button>
-//                 <button
-//                   type="button"
-//                   onClick={() => setFormData({ ...formData, priority: 'medium' })}
-//                   className={`py-2 px-4 rounded-md text-sm font-medium border ${
-//                     formData.priority === 'medium'
-//                       ? 'bg-yellow-50 border-yellow-500 text-yellow-700'
-//                       : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-//                   }`}
-//                   disabled={loading}
-//                 >
-//                   Medium
-//                 </button>
-//                 <button
-//                   type="button"
-//                   onClick={() => setFormData({ ...formData, priority: 'high' })}
-//                   className={`py-2 px-4 rounded-md text-sm font-medium border ${
-//                     formData.priority === 'high'
-//                       ? 'bg-red-50 border-red-500 text-red-700'
-//                       : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-//                   }`}
-//                   disabled={loading}
-//                 >
-//                   High
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-          
-//           <div className="mt-6 flex justify-end space-x-3">
-//             <button
-//               type="button"
-//               onClick={onClose}
-//               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-//               disabled={loading}
-//             >
-//               Cancel
-//             </button>
-//             <button
-//               type="submit"
-//               className={`px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-//                 loading ? 'opacity-70 cursor-not-allowed' : ''
-//               }`}
-//               disabled={loading}
-//             >
-//               {loading ? (
-//                 <>
-//                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-//                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-//                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-//                   </svg>
-//                   Saving...
-//                 </>
-//               ) : task ? 'Update Task' : 'Create Task'}
-//             </button>
-//           </div>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default TaskForm;
-
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Tag, Plus } from 'lucide-react';
+import { X, Calendar, Tag, Plus, Users } from 'lucide-react';
+import { useAuth } from "../contexts/AuthContext"
+import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { app } from "../firebase"
 
 const TaskForm = ({ onClose, onSubmit, task, availableTags = [] }) => {
+  const { currentUser } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     dueDate: '',
     priority: 'medium',
-    tags: []
+    tags: [],
+    assignedTo: [],
+    teamId: null
   });
   
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [showTagInput, setShowTagInput] = useState(false);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [userTeam, setUserTeam] = useState(null);
+  
+  const db = getFirestore(app);
+  
+  // Fetch team information
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    const fetchTeamData = async () => {
+      try {
+        // Check if user has a team
+        const userTeamDoc = await getDoc(doc(db, 'userTeams', currentUser.uid));
+        
+        if (userTeamDoc.exists() && userTeamDoc.data().teamId) {
+          const teamId = userTeamDoc.data().teamId;
+          
+          // Get team details
+          const teamDoc = await getDoc(doc(db, 'teams', teamId));
+          
+          if (teamDoc.exists()) {
+            setUserTeam({
+              id: teamDoc.id,
+              ...teamDoc.data()
+            });
+            
+            // Fetch team members
+            const q = query(
+              collection(db, 'userTeams'),
+              where('teamId', '==', teamId)
+            );
+            
+            const querySnapshot = await getDocs(q);
+            const members = [];
+            
+            querySnapshot.forEach((doc) => {
+              // Don't include current user in the list
+              if (doc.id !== currentUser.uid) {
+                members.push({
+                  id: doc.id,
+                  ...doc.data()
+                });
+              }
+            });
+            
+            setTeamMembers(members);
+            
+            // Update form data with team ID
+            setFormData(prevData => ({
+              ...prevData,
+              teamId: teamId
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching team data:", error);
+      }
+    };
+    
+    fetchTeamData();
+  }, [currentUser, db]);
   
   // Initialize form with task data if editing
   useEffect(() => {
@@ -270,7 +90,9 @@ const TaskForm = ({ onClose, onSubmit, task, availableTags = [] }) => {
         description: task.description || '',
         dueDate: task.dueDate ? formatDateForInput(task.dueDate) : '',
         priority: task.priority || 'medium',
-        tags: task.tags || []
+        tags: task.tags || [],
+        assignedTo: task.assignedTo || [],
+        teamId: task.teamId || null
       });
     }
   }, [task]);
@@ -337,6 +159,23 @@ const TaskForm = ({ onClose, onSubmit, task, availableTags = [] }) => {
       setFormData({
         ...formData,
         tags: [...formData.tags, tag]
+      });
+    }
+  };
+  
+  // Toggle task assignment to a team member
+  const toggleAssignment = (memberId) => {
+    if (formData.assignedTo.includes(memberId)) {
+      // Remove member
+      setFormData({
+        ...formData,
+        assignedTo: formData.assignedTo.filter(id => id !== memberId)
+      });
+    } else {
+      // Add member
+      setFormData({
+        ...formData,
+        assignedTo: [...formData.assignedTo, memberId]
       });
     }
   };
@@ -538,6 +377,49 @@ const TaskForm = ({ onClose, onSubmit, task, availableTags = [] }) => {
                 </div>
               )}
             </div>
+            
+            {/* Team assignment section */}
+            {userTeam && teamMembers.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center">
+                    <Users className="h-4 w-4 mr-1" />
+                    Assign to Team Members
+                  </div>
+                </label>
+                
+                <div className="space-y-2 mt-2">
+                  {teamMembers.map(member => (
+                    <div 
+                      key={member.id}
+                      className={`flex items-center justify-between p-2 rounded-md cursor-pointer ${
+                        formData.assignedTo.includes(member.id) 
+                          ? 'bg-indigo-50 border border-indigo-200' 
+                          : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
+                      }`}
+                      onClick={() => toggleAssignment(member.id)}
+                    >
+                      <div>
+                        <div className="text-sm font-medium">{member.name || member.email}</div>
+                        {member.name && <div className="text-xs text-gray-500">{member.email}</div>}
+                      </div>
+                      
+                      <div className={`h-4 w-4 rounded-full ${
+                        formData.assignedTo.includes(member.id) 
+                          ? 'bg-indigo-600' 
+                          : 'bg-gray-300'
+                      }`}>
+                        {formData.assignedTo.includes(member.id) && (
+                          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-white">
+                            <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             {/* Priority selection */}
             <div>
