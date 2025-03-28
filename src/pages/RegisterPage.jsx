@@ -3,6 +3,7 @@ import { Eye, EyeOff, UserPlus } from 'lucide-react';
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
 import { app } from "../firebase"
+import {Link} from "react-router-dom"
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -259,9 +260,9 @@ const RegisterPage = () => {
           
           <div className="mt-6 text-center text-sm text-gray-600">
             Already have an account?{' '}
-            <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
               Sign in instead
-            </a>
+            </Link>
           </div>
         </div>
       </div>

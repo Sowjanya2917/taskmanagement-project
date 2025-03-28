@@ -3,6 +3,7 @@ import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
 import { app } from "../firebase"
+import { Link } from 'react-router-dom';
 
 export const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -213,9 +214,9 @@ export const LoginPage = () => {
           
           <div className="mt-6 text-center text-sm text-gray-600">
             Don't have an account?{' '}
-            <a href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
               Sign up now
-            </a>
+            </Link>
           </div>
         </div>
       </div>
