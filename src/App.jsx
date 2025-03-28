@@ -27,7 +27,7 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Public only route component (for login/register pages)
+
 const PublicOnlyRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
   
