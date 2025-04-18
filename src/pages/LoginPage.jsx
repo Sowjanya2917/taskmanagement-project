@@ -4,7 +4,7 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
 import { app } from "../firebase"
 import { Link } from 'react-router-dom';
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
 export const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -70,12 +70,11 @@ export const LoginPage = () => {
             const role = userDoc.data().role || 'user';
             console.log("User logged in with role:", role);
             
-            // Use direct window location change instead of navigate for a full page reload
-            // This ensures the auth context is fully updated with the role
+            // Use React Router navigation instead of window.location
             if (role === 'admin') {
-              window.location.href = '/admin/dashboard';
+              navigate('/admin/dashboard');
             } else {
-              window.location.href = '/dashboard';
+              navigate('/dashboard');
             }
           } else {
             console.log("No user document found, creating default user document");
@@ -88,11 +87,11 @@ export const LoginPage = () => {
               createdAt: new Date()
             });
             
-            window.location.href = '/dashboard';
+            navigate('/dashboard');
           }
         } catch (error) {
           console.error("Error checking user role:", error);
-          window.location.href = '/dashboard'; // Default to user dashboard
+          navigate('/dashboard'); // Default to user dashboard
         }
         
       } catch (error) {

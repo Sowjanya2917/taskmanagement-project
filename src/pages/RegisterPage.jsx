@@ -114,9 +114,8 @@ const RegisterPage = () => {
           confirmPassword: ''
         });
         
-        // Force reload to ensure the auth state captures the new role
-        // This is a workaround for the timing issue
-        window.location.href = userRole === 'admin' ? '/admin/dashboard' : '/dashboard';
+        // Use React Router navigation instead of window.location
+        navigate(userRole === 'admin' ? '/admin/dashboard' : '/dashboard');
         
       } catch (error) {
         console.error('Registration error:', error);
