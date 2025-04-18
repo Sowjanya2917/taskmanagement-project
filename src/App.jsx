@@ -11,7 +11,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ContactPage from './pages/ContactPage';
 import NotificationsPage from './pages/NotificationsPage';
 import TaskViewPage from './pages/TaskViewPage';
-import ProfilePage from './pages/ProfilePage';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 // Protected route for users
 const ProtectedRoute = ({ children }) => {
@@ -153,10 +153,10 @@ const App = () => {
             } 
           />
           <Route 
-            path='/profile' 
+            path='/analytics' 
             element={
               <ProtectedRoute>
-                <ProfilePage />
+                <AnalyticsPage />
               </ProtectedRoute>
             } 
           />
