@@ -4,6 +4,7 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
 import { app } from "../firebase"
 import { Link } from 'react-router-dom';
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 export const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -18,7 +19,8 @@ export const LoginPage = () => {
   const [authError, setAuthError] = useState('');
   
   const navigate = useNavigate();
-  const auth = getAuth(app); // Pass the app instance to getAuth
+  const auth = getAuth(app);
+  const db = getFirestore(app);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -60,11 +62,39 @@ export const LoginPage = () => {
           formData.password
         );
         
-        // If login successful
-        console.log('User logged in:', userCredential.user);
+        // Check if user is an admin by querying Firestore directly
+        try {
+          const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+          
+          if (userDoc.exists()) {
+            const role = userDoc.data().role || 'user';
+            console.log("User logged in with role:", role);
+            
+            // Use direct window location change instead of navigate for a full page reload
+            // This ensures the auth context is fully updated with the role
+            if (role === 'admin') {
+              window.location.href = '/admin/dashboard';
+            } else {
+              window.location.href = '/dashboard';
+            }
+          } else {
+            console.log("No user document found, creating default user document");
+            
+            // Create a default user document if none exists
+            await setDoc(doc(db, 'users', userCredential.user.uid), {
+              email: userCredential.user.email,
+              name: userCredential.user.displayName || '',
+              role: 'user',
+              createdAt: new Date()
+            });
+            
+            window.location.href = '/dashboard';
+          }
+        } catch (error) {
+          console.error("Error checking user role:", error);
+          window.location.href = '/dashboard'; // Default to user dashboard
+        }
         
-        // Redirect to home page
-        navigate('/home');
       } catch (error) {
         console.error('Login error:', error);
         
@@ -81,9 +111,8 @@ export const LoginPage = () => {
             setAuthError('This account has been disabled');
             break;
           default:
-            setAuthError('In Valid Credentails Please try again');
+            setAuthError('Invalid Credentials. Please try again');
         }
-      } finally {
         setLoading(false);
       }
     } else {

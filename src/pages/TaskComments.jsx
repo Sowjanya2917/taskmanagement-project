@@ -90,32 +90,56 @@ const TaskComments = ({ taskId, isOpen, onClose, embedded = false }) => {
   };
   
   // Add a new comment
-  const addComment = async (e) => {
-    e.preventDefault();
+const addComment = async (e) => {
+  e.preventDefault();
+  
+  if (!newComment.trim() || !taskId || !currentUser) return;
+  
+  setIsSubmitting(true);
+  
+  try {
+    // Create comment in Firestore
+    const commentRef = await addDoc(collection(db, 'comments'), {
+      taskId,
+      userId: currentUser.uid,
+      userName: currentUser.displayName || 'User',
+      userEmail: currentUser.email,
+      text: newComment.trim(),
+      createdAt: serverTimestamp()
+    });
     
-    if (!newComment.trim() || !taskId || !currentUser) return;
+    // Get the comment ID
+    const commentId = commentRef.id;
     
-    setIsSubmitting(true);
-    
-    try {
-      // Create comment in Firestore
-      await addDoc(collection(db, 'comments'), {
-        taskId,
-        userId: currentUser.uid,
-        userName: currentUser.displayName || 'User',
-        userEmail: currentUser.email,
-        text: newComment.trim(),
-        createdAt: serverTimestamp()
-      });
+    // Get task details
+    const taskDoc = await getDoc(doc(db, 'tasks', taskId));
+    if (taskDoc.exists()) {
+      const taskData = taskDoc.data();
       
-      // Clear the input
-      setNewComment('');
-    } catch (error) {
-      console.error('Error adding comment:', error);
-    } finally {
-      setIsSubmitting(false);
+      // Import notification service
+      const { createCommentNotification } = await import('../utils/NotificationService');
+      
+      // Create notification
+      await createCommentNotification(
+        {
+          id: commentId,
+          userId: currentUser.uid,
+          userName: currentUser.displayName,
+          userEmail: currentUser.email
+        },
+        taskId,
+        taskData.title
+      );
     }
-  };
+    
+    // Clear the input
+    setNewComment('');
+  } catch (error) {
+    console.error('Error adding comment:', error);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   
   // Delete a comment
   const deleteComment = async (commentId) => {

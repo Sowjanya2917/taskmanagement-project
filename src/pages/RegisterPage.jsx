@@ -3,7 +3,8 @@ import { Eye, EyeOff, UserPlus } from 'lucide-react';
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
 import { app } from "../firebase"
-import {Link} from "react-router-dom"
+import { Link } from "react-router-dom"
+import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -18,9 +19,15 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [adminKey, setAdminKey] = useState('');
+  const [showAdminOption, setShowAdminOption] = useState(false);
   
   const navigate = useNavigate();
-  const auth = getAuth(app); // Pass the app instance to getAuth
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  
+  // Admin secret key (in a real application, this would be handled securely on the server)
+  const ADMIN_SECRET_KEY = "admin123"; // This is just for demo purposes
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,6 +50,12 @@ const RegisterPage = () => {
     }
   };
   
+  const toggleAdminOption = () => {
+    setShowAdminOption(!showAdminOption);
+    // Reset admin key when toggling
+    setAdminKey('');
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -54,6 +67,15 @@ const RegisterPage = () => {
     if (!formData.password) newErrors.password = 'Password is required';
     else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    
+    // Check admin key if trying to register as admin
+    if (showAdminOption) {
+      if (!adminKey) {
+        newErrors.adminKey = 'Admin key is required';
+      } else if (adminKey !== ADMIN_SECRET_KEY) {
+        newErrors.adminKey = 'Invalid admin key';
+      }
+    }
     
     if (Object.keys(newErrors).length === 0) {
       setLoading(true);
@@ -70,7 +92,19 @@ const RegisterPage = () => {
           displayName: formData.fullName
         });
         
-        console.log('User registered and profile updated:', userCredential.user);
+        // Determine user role
+        const userRole = showAdminOption && adminKey === ADMIN_SECRET_KEY ? 'admin' : 'user';
+        console.log("Setting user role in Firestore:", userRole);
+        
+        // Store user role in Firestore - IMPORTANT: wait for this to complete
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          name: formData.fullName,
+          email: formData.email,
+          role: userRole,
+          createdAt: new Date()
+        });
+        
+        console.log('User registered with role:', userRole);
         
         // Reset form after successful submission
         setFormData({
@@ -80,8 +114,10 @@ const RegisterPage = () => {
           confirmPassword: ''
         });
         
-        // Redirect to home page
-        navigate('/home');
+        // Force reload to ensure the auth state captures the new role
+        // This is a workaround for the timing issue
+        window.location.href = userRole === 'admin' ? '/admin/dashboard' : '/dashboard';
+        
       } catch (error) {
         console.error('Registration error:', error);
         
@@ -231,6 +267,46 @@ const RegisterPage = () => {
               </div>
               {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
             </div>
+            
+            {/* Admin Registration Option */}
+            <div className="flex items-center">
+              <input
+                id="admin-toggle"
+                name="admin-toggle"
+                type="checkbox"
+                checked={showAdminOption}
+                onChange={toggleAdminOption}
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                disabled={loading}
+              />
+              <label htmlFor="admin-toggle" className="ml-2 block text-sm text-gray-700">
+                Register as Administrator
+              </label>
+            </div>
+            
+            {showAdminOption && (
+              <div>
+                <label htmlFor="adminKey" className="block text-sm font-medium text-gray-700 mb-1">
+                  Admin Secret Key
+                </label>
+                <input
+                  type="password"
+                  id="adminKey"
+                  value={adminKey}
+                  onChange={(e) => setAdminKey(e.target.value)}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none ${
+                    errors.adminKey ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter admin secret key"
+                  disabled={loading}
+                />
+                {errors.adminKey && <p className="mt-1 text-sm text-red-600">{errors.adminKey}</p>}
+                
+                {adminKey === ADMIN_SECRET_KEY && (
+                  <p className="mt-1 text-sm text-green-600">Valid admin key ✓</p>
+                )}
+              </div>
+            )}
             
             <div className="pt-2">
               <button
